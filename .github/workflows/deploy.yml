@@ -1,0 +1,49 @@
+name: Deploy preparation
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment for the deployment preflight
+        required: true
+        default: homolog
+        type: choice
+        options:
+          - homolog
+          - production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-preflight-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Validate ${{ inputs.environment }} build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build selected environment
+        run: ${{ inputs.environment == 'homolog' && 'npm run build:homolog' || 'npm run build' }}
+
+      - name: Register preflight result
+        run: |
+          echo "## Deployment preflight" >> "$GITHUB_STEP_SUMMARY"
+          echo "The **${{ inputs.environment }}** bundle was built successfully." >> "$GITHUB_STEP_SUMMARY"
+          echo "Vercel deployment remains disabled until credentials and environments are configured in the deployment phase." >> "$GITHUB_STEP_SUMMARY"
