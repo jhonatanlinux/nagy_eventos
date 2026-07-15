@@ -30,7 +30,6 @@ experiencia Web responsiva, PWA e preparada para distribuicao Android.
 - Node.js 22 ou superior
 - npm 10 ou superior
 - Git 2.40 ou superior
-- Docker Desktop para Supabase local
 - Android Studio e JDK 21 apenas para desenvolvimento Android
 
 ## Instalacao
@@ -81,32 +80,28 @@ uma dessas verificacoes falhar.
 
 ## Variaveis de ambiente
 
-| Variavel                 | Descricao                                | Sensivel                                  |
-| ------------------------ | ---------------------------------------- | ----------------------------------------- |
-| `VITE_APP_ENV`           | `development`, `homolog` ou `production` | Nao                                       |
-| `VITE_SUPABASE_URL`      | URL publica do projeto Supabase          | Nao                                       |
-| `VITE_SUPABASE_ANON_KEY` | Chave anon/public do Supabase            | Nao, mas deve ser gerenciada por ambiente |
-| `VITE_APP_VERSION`       | Versao injetada pelo pipeline            | Nao                                       |
+| Variavel                        | Descricao                                      | Sensivel                                  |
+| ------------------------------- | ---------------------------------------------- | ----------------------------------------- |
+| `VITE_APP_ENV`                  | `development`, `staging` ou `production`       | Nao                                       |
+| `VITE_SUPABASE_URL`             | URL publica do projeto Supabase                | Nao                                       |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Chave publica para clientes Web, PWA e Android | Nao, mas deve ser gerenciada por ambiente |
+| `VITE_APP_VERSION`              | Versao injetada pelo pipeline                  | Nao                                       |
 
-Nunca use `service_role`, senha do banco, tokens Vercel ou tokens GitHub em variaveis prefixadas por
-`VITE_`; elas sao incorporadas ao bundle do navegador.
+Nunca use `SUPABASE_SECRET_KEY`, `service_role`, senha do banco, tokens Vercel ou tokens GitHub em
+variaveis prefixadas por `VITE_`; elas sao incorporadas ao bundle do navegador.
 
 Modelos disponiveis:
 
 - `.env.development.example`
-- `.env.homolog.example`
+- `.env.staging.example`
 - `.env.production.example`
 
 ## Supabase
 
 O banco e versionado exclusivamente por migrations em `supabase/migrations`.
 
-```bash
-npm run supabase:start
-npm run supabase:reset
-npm run supabase:lint
-npm run supabase:stop
-```
+O projeto nao utiliza Supabase local em Docker. Development, Staging e Production usam projetos
+remotos independentes, publicados exclusivamente pelo pipeline.
 
 Para um ambiente remoto:
 
@@ -117,7 +112,7 @@ npx supabase db push --dry-run
 npx supabase db push
 ```
 
-Use projetos Supabase independentes para Development, Homolog e Production. Nunca conecte o ambiente
+Use projetos Supabase independentes para Development, Staging e Production. Nunca conecte o ambiente
 local ao banco de producao.
 
 ## Vercel
@@ -131,7 +126,7 @@ Variaveis previstas no GitHub/Vercel:
 - `VERCEL_ORG_ID`
 - `VERCEL_PROJECT_ID`
 - `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
 
 ## PWA
 
@@ -193,7 +188,7 @@ Fluxo recomendado:
 1. Crie a branch a partir de `develop`: `git switch -c feature/nome-curto develop`.
 2. Use Conventional Commits.
 3. Abra Pull Request para `develop`.
-4. Promova uma `release/*` para homologacao.
+4. Promova uma `release/*` para staging/homologacao.
 5. Integre a release em `main` e depois sincronize `develop`.
 
 Detalhes e comandos estao em [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md).
