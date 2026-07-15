@@ -108,12 +108,15 @@ Para um ambiente remoto:
 ```bash
 npx supabase login
 npx supabase link --project-ref SEU_PROJECT_REF
-npx supabase db push --dry-run
-npx supabase db push
+npx supabase migration list --linked
+npx supabase db push --linked --include-all --dry-run
+npx supabase db push --linked --include-all
+npx supabase db lint --linked --schema public --level warning --fail-on error
 ```
 
 Use projetos Supabase independentes para Development, Staging e Production. Nunca conecte o ambiente
-local ao banco de producao.
+local ao banco de producao. O seed deve ser incluido somente ao publicar no projeto DEV. Consulte o
+procedimento completo em [supabase/README.md](supabase/README.md).
 
 ## Vercel
 

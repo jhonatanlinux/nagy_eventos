@@ -5,7 +5,7 @@ banco de producao.
 
 | Ambiente    | Branch/Origem                         | Supabase                                    | Vercel                 | Estado                         |
 | ----------- | ------------------------------------- | ------------------------------------------- | ---------------------- | ------------------------------ |
-| Development | `feature/*`, `fix/*` e execucao local | `nagy-eventos-dev` (`gbsaotppqslqaeueohps`) | Development/Preview    | Ativo e isolado                |
+| Development | `feature/*`, `fix/*` e execucao local | `nagy-eventos-dev` (`gbsaotppqslqaeueohps`) | Development/Preview    | Baseline aplicado e validado   |
 | Staging     | `develop`                             | `nagy-eventos-staging`                      | Preview de homologacao | Nao provisionado no plano Free |
 | Production  | `main`                                | `nagy_eventos` (`penymftuwlipszichtjn`)     | Production             | Ativo e isolado                |
 
@@ -15,7 +15,6 @@ banco de producao.
 - Somente publishable keys podem ser usadas no cliente Web/PWA/Android.
 - Secret keys nunca usam prefixo `VITE_` e nao sao necessarias para migrations.
 - Migrations de producao sao executadas exclusivamente pelo pipeline protegido.
-- O arquivo `.env.local` deve apontar apenas para Development e permanece ignorado pelo Git.
 - `.env.local` aponta exclusivamente para Development; producao nunca e usada na execucao local.
 - O plano gratuito permite dois projetos ativos. STAGING permanece sem banco dedicado e nao pode
   receber migrations ou dados ate que exista capacidade de ambiente adicional.
