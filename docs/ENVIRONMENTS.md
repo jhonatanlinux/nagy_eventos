@@ -1,13 +1,12 @@
 # Ambientes
 
-O NAGY EVENTOS usa tres ambientes isolados. Nenhum desenvolvimento local ou Preview pode acessar o
+O NAGY EVENTOS usa dois ambientes isolados. Nenhum desenvolvimento local ou Preview pode acessar o
 banco de producao.
 
-| Ambiente    | Branch/Origem                         | Supabase                                    | Vercel                 | Estado                         |
-| ----------- | ------------------------------------- | ------------------------------------------- | ---------------------- | ------------------------------ |
-| Development | `feature/*`, `fix/*` e execucao local | `nagy-eventos-dev` (`gbsaotppqslqaeueohps`) | Development/Preview    | Baseline aplicado e validado   |
-| Staging     | `develop`                             | `nagy-eventos-staging`                      | Preview de homologacao | Nao provisionado no plano Free |
-| Production  | `main`                                | `nagy_eventos` (`penymftuwlipszichtjn`)     | Production             | Ativo e isolado                |
+| Ambiente    | Branch/Origem              | Supabase                                    | Vercel        | Estado                       |
+| ----------- | -------------------------- | ------------------------------------------- | ------------- | ---------------------------- |
+| Development | `develop` e execucao local | `nagy-eventos-dev` (`gbsaotppqslqaeueohps`) | Local/Preview | Baseline aplicado e validado |
+| Production  | `main`                     | `nagy_eventos` (`penymftuwlipszichtjn`)     | Production    | Deploy aguardando ativacao   |
 
 ## Regras
 
@@ -16,8 +15,7 @@ banco de producao.
 - Secret keys nunca usam prefixo `VITE_` e nao sao necessarias para migrations.
 - Migrations de producao sao executadas exclusivamente pelo pipeline protegido.
 - `.env.local` aponta exclusivamente para Development; producao nunca e usada na execucao local.
-- O plano gratuito permite dois projetos ativos. STAGING permanece sem banco dedicado e nao pode
-  receber migrations ou dados ate que exista capacidade de ambiente adicional.
+- Preview utiliza o projeto Development; nao existe ambiente intermediario.
 
 ## Variaveis por ambiente
 

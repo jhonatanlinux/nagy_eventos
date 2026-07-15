@@ -17,10 +17,13 @@ O projeto segue [Semantic Versioning](https://semver.org/) e Conventional Commit
 - Modelagem Supabase reforcada com integridade multiempresa, RBAC efetivo e bootstrap autenticado.
 - Seed local expandido com perfis, permissoes, categorias e configuracoes padrao.
 - Cliente Web migrado para a publishable key oficial do Supabase, com PKCE e persistencia de sessao.
-- Ambientes padronizados como Development, Staging e Production, sem uso local do Supabase PROD.
+- Ambientes padronizados como Development e Production, sem uso local do Supabase PROD.
 - Projeto Supabase Development provisionado e configuracao local isolada de Production.
 - Baseline remoto do banco DEV aplicado com tres migrations e seed reproduzivel.
 - `pgdelta` experimental desativado para manter o fluxo Supabase sem dependencia de Docker.
+- Fluxo Git simplificado para somente `develop` e `main`.
+- CI/CD reestruturado com gates de qualidade, migrations, Vercel e Semantic Release encadeados.
+- Testes unitarios de RBAC e validacao estrutural dos workflows adicionados ao CI.
 
 ### Security
 

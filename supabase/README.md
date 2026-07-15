@@ -13,7 +13,6 @@ policies, funcoes ou views diretamente no Dashboard.
 ## Ambientes
 
 - Development: projeto `nagy-eventos-dev` (`gbsaotppqslqaeueohps`), isolado e ativo.
-- Staging: nao provisionado enquanto a organizacao permanecer no plano gratuito.
 - Production: projeto oficial `penymftuwlipszichtjn`, sem dados de demonstracao.
 
 A aplicacao usa modo demo somente quando `VITE_SUPABASE_URL` ou `VITE_SUPABASE_PUBLISHABLE_KEY` nao
@@ -41,7 +40,9 @@ npx supabase db lint --linked --schema public --level warning --fail-on error
 ```
 
 O seed e exclusivo de Development. Nunca use `--include-seed` em Production. Migrations de
-Production serao executadas somente pelo pipeline protegido e sem seed.
+Production sao verificadas e executadas somente pelo workflow chamado depois de um merge em `main`.
+O workflow valida explicitamente o project ref de Production e interrompe o deploy se o dry-run ou a
+aplicacao falhar.
 
 O seed de Development nao cria credenciais. O primeiro usuario de cada empresa deve ser criado pelo
 Supabase Auth e, autenticado, chamar `bootstrap_company` uma unica vez.
