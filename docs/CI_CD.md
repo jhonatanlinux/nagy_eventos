@@ -11,6 +11,16 @@ main -> gates finais -> migrations pendentes -> Production -> release
 Somente `develop` e `main` sao aceitas pelos workflows. O deploy permanece desativado ate que a
 variavel de repositorio `VERCEL_DEPLOY_ENABLED` seja definida como `true`.
 
+## Estado configurado
+
+- `VERCEL_DEPLOY_ENABLED=true` no GitHub.
+- Environments `preview` e `production` criados com os secrets exigidos.
+- Vercel Preview conectado ao Supabase DEV.
+- Vercel Production conectado ao Supabase PROD `penymftuwlipszichtjn`.
+- Deploy Git nativo da Vercel desativado; somente o GitHub Actions publica artefatos.
+- Conexao PROD e lint remoto validados em 15/07/2026.
+- Dry-run PROD detectou tres migrations pendentes, que serao aplicadas apenas pelo pipeline de `main`.
+
 ## Workflows
 
 - `lint.yml`: Prettier, ESLint e Conventional Commits.
@@ -70,13 +80,12 @@ Configure em Production:
 `vercel.json` desativa deploys Git automaticos. Os deploys sao enviados exclusivamente pelo GitHub
 Actions depois dos gates, usando a Vercel CLI fixada na versao `56.2.0`.
 
-## Ativacao
+## Ativacao e manutencao
 
-1. Autentique a Vercel CLI e vincule o projeto.
-2. Cadastre os environments e secrets acima no GitHub.
-3. Cadastre as variaveis publicas nos environments da Vercel.
-4. Defina `VERCEL_DEPLOY_ENABLED=true` no repositorio.
-5. Valide primeiro um push em `develop`.
-6. Abra Pull Request de `develop` para `main` somente depois do Preview aprovado.
+1. Valide primeiro cada alteracao com um push em `develop`.
+2. Confirme que o job `Deploy Preview` terminou com sucesso.
+3. Abra Pull Request de `develop` para `main` somente depois do Preview aprovado.
+4. Nunca aplique migrations de producao manualmente fora de uma operacao de recuperacao documentada.
+5. Rotacione os tokens e a senha do banco quando houver suspeita de exposicao.
 
 Sem a flag, lint, testes e build continuam funcionando, mas migrations e deploys sao ignorados.
