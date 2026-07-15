@@ -32,7 +32,7 @@ Depois do merge, o pipeline repete os gates, verifica migrations pendentes, apli
 migrations no Supabase PROD, publica na Vercel e cria a release. Qualquer falha interrompe as etapas
 seguintes.
 
-## Protecoes recomendadas
+## Protecoes ativas
 
 Para `main`:
 
@@ -46,6 +46,9 @@ Para `develop`:
 
 - bloquear force push e delecao;
 - exigir os checks de CI para considerar um commit valido.
+
+As regras estao aplicadas no GitHub. `main` exige Pull Request e os checks `Code quality` e
+`Test and build`; `develop` permite o fluxo diario direto, mas bloqueia force push e exclusao.
 
 ## Conventional Commits
 

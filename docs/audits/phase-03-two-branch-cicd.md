@@ -9,6 +9,7 @@ como gate obrigatorio antes do deploy.
 
 - Historico da antiga branch de infraestrutura incorporado por fast-forward em `develop`.
 - Branch temporaria removida localmente e no GitHub.
+- Protecoes aplicadas em `main` e `develop` no GitHub.
 - Referencias ao fluxo anterior removidas de documentos e configuracoes.
 - Workflows separados para lint, build/testes, migrations, deploy e release.
 - Preview limitado a `develop` e Production limitado a `main`.
@@ -23,3 +24,9 @@ como gate obrigatorio antes do deploy.
 - Falha de migration impede build e deploy produtivos.
 - Deploy Git automatico da Vercel esta desativado para evitar corrida com o GitHub Actions.
 - Nenhum secret e armazenado no repositorio.
+
+## Protecao de branches
+
+- `main`: Pull Request obrigatorio, branch atualizada, historico linear, conversas resolvidas e
+  checks `Code quality` e `Test and build` aprovados.
+- `develop`: push diario permitido, com force push e exclusao bloqueados.
