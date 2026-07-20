@@ -14,10 +14,11 @@ Crie branches a partir de `develop`:
 ```bash
 git switch develop
 git pull --ff-only origin develop
-git switch -c feature/minha-funcionalidade
+git switch develop
+git pull --ff-only origin develop
 ```
 
-Prefixos: `feature/`, `fix/`, `release/` e `hotfix/`.
+Todo desenvolvimento ocorre em `develop`. `main` recebe somente Pull Requests vindos de `develop`.
 
 ## Commits
 

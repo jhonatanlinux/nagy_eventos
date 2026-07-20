@@ -1,66 +1,54 @@
 # Fluxo Git
 
-## Branches permanentes
+O projeto utiliza somente duas branches permanentes.
 
-- `main`: estado de producao. Aceita apenas Pull Requests aprovados de `release/*` ou `hotfix/*`.
-- `develop`: integracao das funcionalidades aprovadas para a proxima versao.
+## Develop
 
-## Branches temporarias
-
-- `feature/<descricao>`: funcionalidade nova, criada de `develop`.
-- `fix/<descricao>`: correcao regular, criada de `develop`.
-- `release/<versao>`: estabilizacao, criada de `develop`.
-- `hotfix/<descricao>`: correcao urgente, criada de `main`.
-
-Use nomes em minusculas, ASCII e separados por hifen.
-
-## Nova funcionalidade
+`develop` concentra desenvolvimento diario, funcionalidades, correcoes, refatoracoes e validacao
+local. Push direto e permitido para o unico desenvolvedor, mas force push e proibido.
 
 ```bash
 git switch develop
 git pull --ff-only origin develop
-git switch -c feature/calendario-operacional
+# editar, validar e criar commits
+git push origin develop
 ```
 
-Depois do Pull Request aprovado, realize merge em `develop` pela interface do GitHub.
+Cada push executa lint, typecheck, testes e build. O Preview da Vercel e opcional e usa exclusivamente
+o Supabase DEV.
 
-## Release
+## Main
+
+`main` representa exclusivamente Production. Nao desenvolva nem envie commits diretamente para
+essa branch. A unica entrada aceita e um Pull Request de `develop` para `main`.
 
 ```bash
 git switch develop
 git pull --ff-only origin develop
-git switch -c release/1.1.0
+# abra o Pull Request develop -> main no GitHub
 ```
 
-A branch recebe apenas correcoes de estabilizacao. Depois da homologacao, abra Pull Request para
-`main`. A automacao de release interpreta os Conventional Commits, cria a tag `vX.Y.Z` e publica as
-notas. Sincronize o resultado novamente em `develop`.
+Depois do merge, o pipeline repete os gates, verifica migrations pendentes, aplica somente as novas
+migrations no Supabase PROD, publica na Vercel e cria a release. Qualquer falha interrompe as etapas
+seguintes.
 
-## Hotfix
-
-```bash
-git switch main
-git pull --ff-only origin main
-git switch -c hotfix/corrigir-autenticacao
-```
-
-Abra Pull Request para `main` e, apos a publicacao, replique a correcao em `develop`.
-
-## Protecoes recomendadas no GitHub
+## Protecoes ativas
 
 Para `main`:
 
-- Bloquear push direto e force push.
-- Exigir Pull Request e uma aprovacao.
-- Exigir branches atualizadas antes do merge.
-- Exigir workflows `Lint` e `Build` aprovados.
-- Restringir delecao da branch.
+- bloquear push direto, force push e delecao;
+- exigir Pull Request originado de `develop`;
+- exigir os checks `Lint / Code quality` e `Build / Test and build`;
+- exigir branch atualizada antes do merge;
+- impedir merge enquanto houver conversas pendentes.
 
 Para `develop`:
 
-- Bloquear force push.
-- Exigir Pull Request.
-- Exigir workflows `Lint` e `Build`.
+- bloquear force push e delecao;
+- exigir os checks de CI para considerar um commit valido.
+
+As regras estao aplicadas no GitHub. `main` exige Pull Request e os checks `Code quality` e
+`Test and build`; `develop` permite o fluxo diario direto, mas bloqueia force push e exclusao.
 
 ## Conventional Commits
 
@@ -72,18 +60,11 @@ Para `develop`:
 <rodape opcional>
 ```
 
-Tipos aceitos:
+Tipos aceitos: `feat`, `fix`, `refactor`, `style`, `perf`, `docs`, `test`, `build`, `ci`, `chore`,
+`revert`.
 
-- `feat`: funcionalidade nova.
-- `fix`: correcao de defeito.
-- `refactor`: mudanca interna sem alterar comportamento.
-- `style`: formatacao sem mudanca funcional.
-- `perf`: melhoria de desempenho.
-- `docs`: documentacao.
-- `test`: testes.
-- `build`: build ou dependencias.
-- `ci`: automacao.
-- `chore`: manutencao.
-- `revert`: reversao.
+- `fix` e `perf` geram versao patch.
+- `feat` gera versao minor.
+- `BREAKING CHANGE` gera versao major.
 
 O arquivo `commitlint.config.cjs` formaliza essa convencao.

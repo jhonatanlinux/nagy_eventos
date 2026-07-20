@@ -63,7 +63,7 @@ function UserProfile({ collapsed }: { collapsed: boolean }) {
                   {user?.name ?? "Usuario NAGY"}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {user?.email ?? "admin@nagyeventos.com"}
+                  {user?.email ?? "admin@nagyeventos.com.br"}
                 </p>
               </div>
               <Button

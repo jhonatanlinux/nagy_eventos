@@ -1,34 +1,32 @@
-name: Deploy preparation
+name: Deploy
 
 on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: Target environment for the deployment preflight
-        required: true
-        default: homolog
-        type: choice
-        options:
-          - homolog
-          - production
+  push:
+    branches: [develop, main]
 
 permissions:
   contents: read
 
 concurrency:
-  group: deploy-preflight-${{ inputs.environment }}
-  cancel-in-progress: false
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  VERCEL_CLI_VERSION: 56.2.0
 
 jobs:
-  preflight:
-    name: Validate ${{ inputs.environment }} build
+  validate:
+    name: Production quality gate
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    environment: ${{ inputs.environment }}
+    timeout-minutes: 20
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -39,11 +37,124 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build selected environment
-        run: ${{ inputs.environment == 'homolog' && 'npm run build:homolog' || 'npm run build' }}
+      - name: Run complete quality gate
+        run: npm run ci
 
-      - name: Register preflight result
+  preview:
+    name: Deploy Preview
+    needs: validate
+    if: github.ref == 'refs/heads/develop' && vars.VERCEL_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: preview
+    permissions:
+      contents: read
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Pull Preview configuration
+        run: npx --yes vercel@${VERCEL_CLI_VERSION} pull --yes --environment=preview --token="$VERCEL_TOKEN"
+
+      - name: Build Preview artifacts
+        run: npx --yes vercel@${VERCEL_CLI_VERSION} build --token="$VERCEL_TOKEN"
+
+      - name: Deploy Preview artifacts
+        shell: bash
         run: |
-          echo "## Deployment preflight" >> "$GITHUB_STEP_SUMMARY"
-          echo "The **${{ inputs.environment }}** bundle was built successfully." >> "$GITHUB_STEP_SUMMARY"
-          echo "Vercel deployment remains disabled until credentials and environments are configured in the deployment phase." >> "$GITHUB_STEP_SUMMARY"
+          deployment_url=$(npx --yes vercel@${VERCEL_CLI_VERSION} deploy --prebuilt --archive=tgz --token="$VERCEL_TOKEN")
+          echo "Preview: $deployment_url" >> "$GITHUB_STEP_SUMMARY"
+
+  migrations:
+    name: Gate production migrations
+    needs: validate
+    if: github.ref == 'refs/heads/main' && vars.VERCEL_DEPLOY_ENABLED == 'true'
+    uses: ./.github/workflows/migration.yml
+
+  resolve-version:
+    name: Resolve production version
+    needs: [validate, migrations]
+    if: github.ref == 'refs/heads/main' && vars.VERCEL_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve next release
+        id: version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/resolve-release-version.mjs
+
+  production:
+    name: Deploy Production
+    needs: [validate, migrations, resolve-version]
+    if: github.ref == 'refs/heads/main' && vars.VERCEL_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    permissions:
+      contents: read
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VITE_APP_VERSION: ${{ needs.resolve-version.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Pull Production configuration
+        run: npx --yes vercel@${VERCEL_CLI_VERSION} pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Build Production artifacts
+        run: npx --yes vercel@${VERCEL_CLI_VERSION} build --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy Production artifacts
+        shell: bash
+        run: |
+          deployment_url=$(npx --yes vercel@${VERCEL_CLI_VERSION} deploy --prebuilt --prod --archive=tgz --token="$VERCEL_TOKEN")
+          echo "Production: $deployment_url" >> "$GITHUB_STEP_SUMMARY"
+
+  release:
+    name: Publish release
+    needs: production
+    if: github.ref == 'refs/heads/main' && vars.VERCEL_DEPLOY_ENABLED == 'true'
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    uses: ./.github/workflows/release.yml

@@ -183,7 +183,7 @@ export function Topbar({ onOpenMobileSidebar }: TopbarProps) {
                   {user?.name ?? "Usuario NAGY"}
                 </span>
                 <span className="block truncate font-normal">
-                  {user?.email ?? "admin@nagyeventos.com"}
+                  {user?.email ?? "admin@nagyeventos.com.br"}
                 </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

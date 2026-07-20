@@ -30,7 +30,6 @@ experiencia Web responsiva, PWA e preparada para distribuicao Android.
 - Node.js 22 ou superior
 - npm 10 ou superior
 - Git 2.40 ou superior
-- Docker Desktop para Supabase local
 - Android Studio e JDK 21 apenas para desenvolvimento Android
 
 ## Instalacao
@@ -63,7 +62,7 @@ npm run dev
 Acesse `http://127.0.0.1:5173`.
 
 Enquanto o Supabase nao estiver configurado, a aplicacao utiliza o repositorio local de demonstracao.
-O login demo usa `admin@nagyeventos.com` e qualquer senha nao vazia.
+O acesso administrativo usa `admin@nagyeventos.com.br` e autenticacao real pelo Supabase.
 
 ## Qualidade e build
 
@@ -81,49 +80,48 @@ uma dessas verificacoes falhar.
 
 ## Variaveis de ambiente
 
-| Variavel                 | Descricao                                | Sensivel                                  |
-| ------------------------ | ---------------------------------------- | ----------------------------------------- |
-| `VITE_APP_ENV`           | `development`, `homolog` ou `production` | Nao                                       |
-| `VITE_SUPABASE_URL`      | URL publica do projeto Supabase          | Nao                                       |
-| `VITE_SUPABASE_ANON_KEY` | Chave anon/public do Supabase            | Nao, mas deve ser gerenciada por ambiente |
-| `VITE_APP_VERSION`       | Versao injetada pelo pipeline            | Nao                                       |
+| Variavel                        | Descricao                                      | Sensivel                                  |
+| ------------------------------- | ---------------------------------------------- | ----------------------------------------- |
+| `VITE_APP_ENV`                  | `development` ou `production`                  | Nao                                       |
+| `VITE_SUPABASE_URL`             | URL publica do projeto Supabase                | Nao                                       |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Chave publica para clientes Web, PWA e Android | Nao, mas deve ser gerenciada por ambiente |
+| `VITE_APP_VERSION`              | Versao injetada pelo pipeline                  | Nao                                       |
 
-Nunca use `service_role`, senha do banco, tokens Vercel ou tokens GitHub em variaveis prefixadas por
-`VITE_`; elas sao incorporadas ao bundle do navegador.
+Nunca use `SUPABASE_SECRET_KEY`, `service_role`, senha do banco, tokens Vercel ou tokens GitHub em
+variaveis prefixadas por `VITE_`; elas sao incorporadas ao bundle do navegador.
 
 Modelos disponiveis:
 
 - `.env.development.example`
-- `.env.homolog.example`
 - `.env.production.example`
 
 ## Supabase
 
 O banco e versionado exclusivamente por migrations em `supabase/migrations`.
 
-```bash
-npm run supabase:start
-npm run supabase:reset
-npm run supabase:lint
-npm run supabase:stop
-```
+O projeto nao utiliza Supabase local em Docker. Development e Production usam projetos remotos
+independentes.
 
 Para um ambiente remoto:
 
 ```bash
 npx supabase login
 npx supabase link --project-ref SEU_PROJECT_REF
-npx supabase db push --dry-run
-npx supabase db push
+npx supabase migration list --linked
+npx supabase db push --linked --include-all --dry-run
+npx supabase db push --linked --include-all
+npx supabase db lint --linked --schema public --level warning --fail-on error
 ```
 
-Use projetos Supabase independentes para Development, Homolog e Production. Nunca conecte o ambiente
-local ao banco de producao.
+Nunca conecte o ambiente local ao banco de producao. O seed deve ser incluido somente ao publicar no
+projeto DEV. Migrations de Production sao executadas apenas pelo workflow protegido apos merge em
+`main`. Consulte o procedimento completo em [supabase/README.md](supabase/README.md).
 
 ## Vercel
 
-O arquivo `vercel.json` define build Vite, fallback da SPA, cache de assets e headers de seguranca.
-O provisionamento sera ativado na fase especifica de deploy.
+O arquivo `vercel.json` define build Vite, fallback da SPA, cache e headers de seguranca. Deploys Git
+diretos da Vercel estao desativados para impedir publicacao paralela ao pipeline. O GitHub Actions
+executa Preview em `develop` e Production em `main` quando `VERCEL_DEPLOY_ENABLED=true`.
 
 Variaveis previstas no GitHub/Vercel:
 
@@ -131,7 +129,9 @@ Variaveis previstas no GitHub/Vercel:
 - `VERCEL_ORG_ID`
 - `VERCEL_PROJECT_ID`
 - `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+
+O procedimento de ativacao e a ordem dos gates estao em [docs/CI_CD.md](docs/CI_CD.md).
 
 ## PWA
 
@@ -179,22 +179,18 @@ docs/            auditorias e documentacao tecnica
 
 ## Fluxo Git
 
-| Branch      | Finalidade                                    |
-| ----------- | --------------------------------------------- |
-| `main`      | Codigo estavel e publicavel em producao       |
-| `develop`   | Integracao continua das proximas entregas     |
-| `feature/*` | Novas funcionalidades originadas de `develop` |
-| `fix/*`     | Correcoes regulares originadas de `develop`   |
-| `release/*` | Estabilizacao de uma versao antes de `main`   |
-| `hotfix/*`  | Correcao urgente originada de `main`          |
+| Branch    | Finalidade                                               |
+| --------- | -------------------------------------------------------- |
+| `develop` | Desenvolvimento diario, testes e Preview                 |
+| `main`    | Codigo validado e publicado exclusivamente em Production |
 
 Fluxo recomendado:
 
-1. Crie a branch a partir de `develop`: `git switch -c feature/nome-curto develop`.
-2. Use Conventional Commits.
-3. Abra Pull Request para `develop`.
-4. Promova uma `release/*` para homologacao.
-5. Integre a release em `main` e depois sincronize `develop`.
+1. Desenvolva e valide localmente em `develop`.
+2. Use Conventional Commits e envie os commits para `origin/develop`.
+3. Abra Pull Request de `develop` para `main` quando a entrega estiver pronta.
+4. Integre somente depois de lint, testes e build aprovados.
+5. Nunca desenvolva ou envie push direto para `main`.
 
 Detalhes e comandos estao em [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md).
 

@@ -1,8 +1,9 @@
 name: Build
 
 on:
+  workflow_dispatch:
   pull_request:
-    branches: [main, develop]
+    branches: [main]
   push:
     branches: [main, develop]
 
@@ -15,7 +16,7 @@ concurrency:
 
 jobs:
   build:
-    name: Typecheck and build
+    name: Test and build
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -34,6 +35,12 @@ jobs:
 
       - name: Run TypeScript checks
         run: npm run typecheck
+
+      - name: Run automated tests
+        run: npm run test
+
+      - name: Validate workflows
+        run: npm run workflows:validate
 
       - name: Build production bundle
         run: npm run build

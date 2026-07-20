@@ -15,7 +15,6 @@ dist-ssr
 .env.*
 !.env.example
 !.env.development.example
-!.env.homolog.example
 !.env.production.example
 .vercel
 .supabase

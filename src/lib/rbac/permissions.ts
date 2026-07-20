@@ -6,6 +6,7 @@ export type PermissionKey =
   | "equipment.manage"
   | "rentals.manage"
   | "finance.read"
+  | "finance.manage"
   | "expenses.manage"
   | "users.manage"
   | "permissions.manage"
@@ -29,6 +30,11 @@ export const permissions: {
     module: "Agendamentos",
   },
   { key: "finance.read", label: "Visualizar financeiro", module: "Financeiro" },
+  {
+    key: "finance.manage",
+    label: "Gerenciar financeiro",
+    module: "Financeiro",
+  },
   { key: "expenses.manage", label: "Gerenciar despesas", module: "Despesas" },
   { key: "users.manage", label: "Gerenciar usuarios", module: "Usuarios" },
   {
@@ -51,12 +57,14 @@ export const rolePermissions: Record<RoleName, PermissionKey[]> = {
     "equipment.manage",
     "rentals.manage",
     "finance.read",
+    "finance.manage",
     "expenses.manage",
     "users.manage",
   ],
   Financeiro: [
     "dashboard.read",
     "finance.read",
+    "finance.manage",
     "expenses.manage",
     "clients.manage",
   ],

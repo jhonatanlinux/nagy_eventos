@@ -2,6 +2,8 @@
 
 Descreva o problema resolvido e o resultado esperado.
 
+> Pull Requests de publicacao devem usar `develop` como origem e `main` como destino.
+
 ## Alteracoes
 
 - Liste as mudancas relevantes.
@@ -12,6 +14,8 @@ Descreva o problema resolvido e o resultado esperado.
 - [ ] `npm run lint`
 - [ ] `npm run typecheck`
 - [ ] `npm run build`
+- [ ] `npm run test`
+- [ ] `npm run workflows:validate`
 - [ ] Fluxo afetado validado manualmente
 
 ## Evidencias

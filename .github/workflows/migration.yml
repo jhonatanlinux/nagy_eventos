@@ -1,0 +1,75 @@
+name: Production migrations
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    name: Apply pending migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Guard production project
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "Production migrations are restricted to main." >&2
+            exit 1
+          fi
+
+          if [[ "$SUPABASE_PROJECT_ID" != "penymftuwlipszichtjn" ]]; then
+            echo "Refusing to migrate an unexpected Supabase project." >&2
+            exit 1
+          fi
+
+      - name: Link production project
+        run: npx supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Detect pending migrations
+        id: pending
+        shell: bash
+        run: |
+          set -o pipefail
+          output=$(npx supabase db push --linked --include-all --dry-run --password "$SUPABASE_DB_PASSWORD" 2>&1)
+          printf '%s\n' "$output"
+
+          if grep -q "Would push these migrations:" <<< "$output"; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          elif grep -q "Remote database is up to date" <<< "$output"; then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Unable to determine migration state." >&2
+            exit 1
+          fi
+
+      - name: Apply pending migrations
+        if: steps.pending.outputs.found == 'true'
+        run: npx supabase db push --linked --include-all --password "$SUPABASE_DB_PASSWORD" --yes
+
+      - name: Skip migrations
+        if: steps.pending.outputs.found == 'false'
+        run: echo "No pending migrations. Production database was not changed."
+
+      - name: Validate remote schema
+        run: npx supabase db lint --linked --schema public --level warning --fail-on error

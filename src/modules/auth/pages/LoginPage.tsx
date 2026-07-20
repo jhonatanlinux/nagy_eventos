@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { Navigate, useNavigate } from "react-router-dom";
 
 import { AppLogo } from "@/components/common/AppLogo";
+import { PageLoader } from "@/components/common/PageLoader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,8 +20,10 @@ import { loginSchema, type LoginFormValues } from "../schemas/loginSchema";
 export function LoginPage() {
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isInitialized = useAuthStore((state) => state.isInitialized);
   const login = useAuthStore((state) => state.login);
   const [message, setMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const {
     register,
     handleSubmit,
@@ -29,25 +32,43 @@ export function LoginPage() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "admin@nagyeventos.com",
+      email: "admin@nagyeventos.com.br",
       password: "",
       remember: true,
     },
   });
+
+  if (!isInitialized) {
+    return <PageLoader />;
+  }
 
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
 
   async function submit(values: LoginFormValues) {
-    await login(values.email, values.password, values.remember);
-    navigate("/dashboard", { replace: true });
+    setMessage("");
+    setErrorMessage("");
+
+    try {
+      await login(values.email, values.password, values.remember);
+      navigate("/dashboard", { replace: true });
+    } catch {
+      setErrorMessage("E-mail ou senha incorretos.");
+    }
   }
 
   async function requestPasswordReset() {
     const email = watch("email");
-    await AuthService.requestPasswordReset(email);
-    setMessage("Solicitacao de recuperacao registrada.");
+    setMessage("");
+    setErrorMessage("");
+
+    try {
+      await AuthService.requestPasswordReset(email);
+      setMessage("Solicitacao de recuperacao registrada.");
+    } catch {
+      setErrorMessage("Nao foi possivel solicitar a recuperacao de senha.");
+    }
   }
 
   return (
@@ -128,6 +149,11 @@ export function LoginPage() {
 
               {message ? (
                 <p className="text-sm text-primary">{message}</p>
+              ) : null}
+              {errorMessage ? (
+                <p className="text-sm text-destructive" role="alert">
+                  {errorMessage}
+                </p>
               ) : null}
 
               <Button

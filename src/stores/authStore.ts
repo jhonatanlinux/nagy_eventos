@@ -1,41 +1,35 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 
-import { AuthService } from "@/services/auth/AuthService";
-
-type AuthUser = {
-  name: string;
-  email: string;
-};
+import { AuthService, type AuthUser } from "@/services/auth/AuthService";
 
 type AuthState = {
   user: AuthUser | null;
   isAuthenticated: boolean;
+  isInitialized: boolean;
+  initialize: () => Promise<void>;
+  syncUser: (user: AuthUser | null) => void;
   login: (email: string, password: string, remember: boolean) => Promise<void>;
   logout: () => Promise<void>;
 };
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      user: null,
-      isAuthenticated: false,
-      login: async (email, password, remember) => {
-        const user = await AuthService.login({ email, password, remember });
-        set({ user, isAuthenticated: true });
-      },
-      logout: async () => {
-        const email = get().user?.email ?? "usuario";
-        await AuthService.logout(email);
-        set({ user: null, isAuthenticated: false });
-      },
-    }),
-    {
-      name: "nagy-auth",
-      partialize: (state) => ({
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
-      }),
-    },
-  ),
-);
+export const useAuthStore = create<AuthState>()((set, get) => ({
+  user: null,
+  isAuthenticated: false,
+  isInitialized: false,
+  initialize: async () => {
+    const user = await AuthService.getCurrentUser();
+    set({ user, isAuthenticated: Boolean(user), isInitialized: true });
+  },
+  syncUser: (user) => {
+    set({ user, isAuthenticated: Boolean(user), isInitialized: true });
+  },
+  login: async (email, password, remember) => {
+    const user = await AuthService.login({ email, password, remember });
+    set({ user, isAuthenticated: true, isInitialized: true });
+  },
+  logout: async () => {
+    const email = get().user?.email ?? "usuario";
+    await AuthService.logout(email);
+    set({ user: null, isAuthenticated: false, isInitialized: true });
+  },
+}));
