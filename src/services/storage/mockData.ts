@@ -168,7 +168,7 @@ export function createSeedDatabase(): DatabaseShape {
       {
         id: createId("user"),
         name: "Administrador NAGY",
-        email: "admin@nagyeventos.com",
+        email: "admin@nagyeventos.com.br",
         role: "Administrador",
         avatarUrl: "",
         lastAccess: now,
@@ -179,7 +179,7 @@ export function createSeedDatabase(): DatabaseShape {
       {
         id: createId("user"),
         name: "Operacao",
-        email: "operacao@nagyeventos.com",
+        email: "operacao@nagyeventos.com.br",
         role: "Operacional",
         avatarUrl: "",
         lastAccess: now,

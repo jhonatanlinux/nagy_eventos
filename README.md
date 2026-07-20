@@ -62,7 +62,7 @@ npm run dev
 Acesse `http://127.0.0.1:5173`.
 
 Enquanto o Supabase nao estiver configurado, a aplicacao utiliza o repositorio local de demonstracao.
-O login demo usa `admin@nagyeventos.com` e qualquer senha nao vazia.
+O acesso administrativo usa `admin@nagyeventos.com.br` e autenticacao real pelo Supabase.
 
 ## Qualidade e build
 
